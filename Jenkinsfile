@@ -13,6 +13,7 @@ pipeline {
             steps {
 				echo "PATH - $PATH"
                 echo 'Build'
+				echo "BUILD_TAG - $env.BUILD_TAG"
 				sh "mvn --version"
 				sh "docker version"
             }
@@ -23,7 +24,7 @@ pipeline {
 			}
 		}
 
-		stage('test') {
+		stage('Test') {
             steps {
                 sh "mvn test"
             }
@@ -33,6 +34,29 @@ pipeline {
                 sh "mvn failsafe:integration-test failsafe:verify"
             }
         }
+		stage('package') {
+            steps {
+                sh "mvn package -DskipTests"
+            }
+        }
+
+		stage('Build Docker Image'){
+			steps{
+				//docker build -t alicharkhi18/currency-exchange-devops:$env.BUILD_TAG
+				script{
+					dockerImage =docker.build("alicharkhi18/currency-exchange-devops:${env.BUILD_TAG}")
+				}
+			}
+		}
+
+		stage('Push Docker Image'){
+			steps{
+				docker.withRegistry('','dockerhub'){
+					dockerImage.push();
+					dockerImage.push('latest');
+				}
+			}
+		}
     }
 	post {
 		always{
