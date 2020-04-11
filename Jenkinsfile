@@ -55,6 +55,7 @@ pipeline {
 					docker.withRegistry('','dockerthub') {
 						dockerImage.push();
 						dockerImage.push('latest');
+					}
 				}
 			}
 		}
